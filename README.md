@@ -45,9 +45,34 @@ FAIL: What is 15 multiplied by 13?
 
 Overall score: 90%
 
+## Evaluator types
+
+**Exact match** — checks if the expected answer appears in the response.
+Fast, deterministic, works well for factual questions with fixed answers.
+Breaks down for open-ended responses.
+
+**LLM-as-judge** — sends the prompt, response, and expected answer to
+a second LLM call and asks it to grade quality on a 0 to 1 scale with
+a reason. Handles nuance that exact match can't.
+
+Known limitation: LLM-as-judge has a self-similarity bias where the
+judge tends to favor responses that sound like its own output style.
+For production use, the judge model should differ from the model being
+evaluated.
+
+## Example LLM-as-judge output
+
+```
+Score: 1.0
+Reason: The response accurately explains Rayleigh scattering as the
+reason the sky appears blue, fully matching the expected answer.
+Response: The sky appears blue because of Rayleigh scattering, where
+shorter blue wavelengths scatter more efficiently through atmospheric
+gas molecules.
+```
+
 ## What's coming next
 
-- LLM-as-judge evaluator (LLM grades the response, not just keyword match)
 - Semantic similarity scoring using embeddings
 - SQLite score history to track results over time
 - GitHub Actions CI to run evals automatically on every commit
