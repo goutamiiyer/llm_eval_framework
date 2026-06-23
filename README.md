@@ -97,6 +97,24 @@ limitation of LLM-as-judge evaluation.
 Neither evaluator is sufficient alone. The right approach is using both
 and understanding what each one catches.
 
+### Key finding: semantic similarity needs sentence-level expected answers
+
+Initial semantic scoring returned 0.51 average despite most answers
+being factually correct. Root cause: expected answers were single
+words or numbers like "100" or "Canberra", while LLM responses were
+full sentences. Embedding models compare meaning at the sentence level,
+so comparing "The boiling point of water is 100 degrees Celsius" against
+"100" produces near-zero similarity even when the answer is right.
+
+Fix: added `expected_semantic` field to test cases with full sentence
+versions of expected answers. Semantic evaluator uses this field when
+available, falls back to `expected` otherwise.
+
+Lesson: choose your evaluator based on the shape of your data, not
+just the type of question. Short factual lookups belong with exact
+match. Semantic similarity earns its place when responses and expected
+answers are both rich, paragraph-length text.
+
 ## Run history
 
 Every eval run is saved to a local SQLite database with a unique run ID,
