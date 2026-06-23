@@ -1,0 +1,15 @@
+{"prompt": "What is the capital of Australia?", "expected": "Canberra"}
+{"prompt": "What is 2 + 2?", "expected": "4"}
+{"prompt": "Who wrote Romeo and Juliet?", "expected": "Shakespeare"}
+{"prompt": "How many days are in a leap year?", "expected": "366"}
+{"prompt": "What is the boiling point of water in Celsius?", "expected": "100"}
+{"prompt": "Who painted the Mona Lisa?", "expected": "Leonardo da Vinci"}
+{"prompt": "What planet is closest to the sun?", "expected": "Mercury"}
+{"prompt": "What is 15 multiplied by 13?", "expected": "195"}
+{"prompt": "Who was the first person to walk on the moon?", "expected": "Neil Armstrong"}
+{"prompt": "Respond with only the number 42. Do not write anything else.", "expected": "42"}
+{"prompt": "List exactly 2 colors. No more, no less. No explanation.", "expected": "2 colors listed"}
+{"prompt": "What came first, the American Revolution or the French Revolution?", "expected": "American Revolution"}
+{"prompt": "What is the capital of Canada?", "expected": "Ottawa"}
+{"prompt": "Translate the word 'hello' to Spanish. One word only.", "expected": "hola"}
+{"prompt": "Is the Great Wall of China visible from space with the naked eye?", "expected": "no"}
