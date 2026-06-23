@@ -71,6 +71,21 @@ shorter blue wavelengths scatter more efficiently through atmospheric
 gas molecules.
 ```
 
+## Key finding
+
+Exact match scored 93%, LLM judge scored 83% on the same 15 test cases.
+
+They fail differently:
+- Exact match misses instruction following violations (extra words,
+  wrong format) because it only checks for keyword presence
+- LLM judge sometimes penalizes correct answers for lacking "context"
+  it was never asked to provide (criteria drift)
+
+Neither evaluator is sufficient alone. Exact match works best for
+factual lookups with fixed answers. LLM judge works best for open-ended
+responses where meaning matters more than exact wording.
+
+
 ## What's coming next
 
 - Semantic similarity scoring using embeddings

@@ -1,7 +1,6 @@
 from groq import Groq
 import os
 from dotenv import load_dotenv
-import json
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -24,22 +23,6 @@ def run_eval(prompt: str, expected: str) -> dict:
     )
     answer = response.choices[0].message.content
     return evaluate_exact_match(answer, expected)
-
-result = run_eval("What is the capital of Australia?", "Canberra")
-print(result)
-
-with open("test_cases.jsonl") as f:
-    test_cases = [json.loads(line) for line in f]
-
-results = []
-for case in test_cases:
-    result = run_eval(case["prompt"], case["expected"])
-    results.append(result)
-    print(f"{'PASS' if result['passed'] else 'FAIL'}: {case['prompt']}")
-
-score = sum(r["score"] for r in results) / len(results)
-print(f"\nOverall score: {score:.0%}")
-
 
 def evaluate_with_llm_judge(prompt: str, response: str, expected: str) -> dict:
     judge_prompt = f"""You are an expert evaluator grading an LLM response.
@@ -87,12 +70,28 @@ def run_eval_with_judge(prompt: str, expected: str) -> dict:
     answer = response.choices[0].message.content
     return evaluate_with_llm_judge(prompt, answer, expected)
 
+import json
 
-print("\n--- LLM-as-judge test ---")
-result = run_eval_with_judge(
-    "Explain why the sky is blue in one sentence.",
-    "Light scattering by atmosphere"
-)
-print(f"Score: {result['score']}")
-print(f"Reason: {result['reason']}")
-print(f"Response: {result['response']}")
+with open("test_cases.jsonl") as f:
+    test_cases = [json.loads(line) for line in f]
+
+print("\n--- Full eval run: exact match vs LLM-as-judge ---\n")
+
+results = []
+for case in test_cases:
+    exact = run_eval(case["prompt"], case["expected"])
+    judge = run_eval_with_judge(case["prompt"], case["expected"])
+    
+    results.append({"exact": exact, "judge": judge, "prompt": case["prompt"]})
+    
+    print(f"Prompt: {case['prompt'][:60]}")
+    print(f"  Exact match : {'PASS' if exact['passed'] else 'FAIL'} (score: {exact['score']})")
+    print(f"  LLM judge   : {'PASS' if judge['passed'] else 'FAIL'} (score: {judge['score']})")
+    print(f"  Judge reason: {judge['reason']}")
+    print()
+
+exact_score = sum(r["exact"]["score"] for r in results) / len(results)
+judge_score = sum(r["judge"]["score"] for r in results) / len(results)
+
+print(f"Overall exact match score : {exact_score:.0%}")
+print(f"Overall LLM judge score   : {judge_score:.0%}")
