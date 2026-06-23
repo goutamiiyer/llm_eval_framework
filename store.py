@@ -62,3 +62,29 @@ def get_last_runs(n: int = 5):
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+
+def get_last_run_id():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT run_id FROM results
+        ORDER BY timestamp DESC
+        LIMIT 2
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    if len(rows) < 2:
+        return None
+    return rows[1][0]  # second most recent run
+
+def get_run_results(run_id: str, evaluator: str):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT prompt, score, passed FROM results
+        WHERE run_id = ? AND evaluator = ?
+    """, (run_id, evaluator))
+    rows = cursor.fetchall()
+    conn.close()
+    return {row[0]: {"score": row[1], "passed": row[2]} for row in rows}

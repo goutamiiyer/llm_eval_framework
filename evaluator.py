@@ -7,6 +7,8 @@ import json
 from store import init_db, save_results, get_last_runs
 import uuid
 
+from regression import detect_regressions
+
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -131,3 +133,6 @@ print(f"\nRun saved with ID: {run_id}")
 print("\n--- Last 5 runs ---")
 for row in get_last_runs():
     print(f"Run {row[0]} | {row[1][:19]} | {row[2]} | avg score: {row[3]:.2f} | cases: {row[4]}")
+
+detect_regressions(run_id, "exact_match")
+detect_regressions(run_id, "llm_judge")
