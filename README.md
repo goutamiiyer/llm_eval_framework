@@ -143,8 +143,6 @@ run whether anything broke.
 
 ## What's coming next
 
-- Semantic similarity scoring using embeddings
-- GitHub Actions CI to run evals automatically on every commit
 - Hallucination-specific test cases
 
 ## Tech stack
