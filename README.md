@@ -5,28 +5,33 @@ Built from scratch in Python. No bloated dependencies, no magic.
 
 ## What it does
 
-Takes a list of test cases, sends each prompt to an LLM, checks the
-response against the expected answer using two different evaluators,
-and saves every run to a local database so you can track scores over time.
+Takes a list of test cases, sends each prompt to an LLM, scores each
+response using three different evaluators, saves every run to a local
+SQLite database, and automatically flags regressions between runs.
 
-Built with Groq (free tier) and Llama 3.1, but designed so the LLM
-provider is swappable without touching the evaluator logic.
+Built with Groq (free tier) and Llama 3.1, but the LLM provider is
+swappable without touching any evaluator logic.
 
 ## Why this matters
 
-Most developers just call an LLM and hope it works. Evaluation is how
-you actually know if it works, across different inputs, consistently,
-across runs. This project catches regressions when you swap models,
-change prompts, or add new features to an AI system.
+Most developers call an LLM and hope it works. Evaluation is how you
+actually know if it works, consistently, across inputs, across runs.
+This framework catches regressions when you swap models, change prompts,
+or add new features to an AI system.
 
 ## Project structure
 
 ```
-LLM_eval_framework/
-├── evaluator.py       # core eval logic, API calls, main loop
-├── store.py           # SQLite persistence, run history
-├── test_cases.jsonl   # test dataset: prompts + expected answers
-└── .env               # API keys, never committed to git
+llm_eval_framework/
+├── evaluator.py            # core eval logic, API calls, main loop
+├── semantic_eval.py        # sentence embedding similarity evaluator
+├── regression.py           # detects score drops between runs
+├── store.py                # SQLite persistence and run history
+├── test_cases.jsonl        # test dataset with exact and semantic expected answers
+├── .github/
+│   └── workflows/
+│       └── eval_ci.yml     # runs evals automatically on every push
+└── .env                    # API keys, never committed to git
 ```
 
 ## How to run
@@ -34,7 +39,7 @@ LLM_eval_framework/
 1. Clone the repo
 2. Install dependencies
 ```
-pip install groq python-dotenv
+pip install groq python-dotenv sentence-transformers
 ```
 3. Create a .env file with your Groq API key
 ```
@@ -48,87 +53,94 @@ python evaluator.py
 ## Sample output
 
 ```
---- Full eval run: exact match vs LLM-as-judge ---
+--- Full eval run: exact match vs LLM-as-judge vs Semantic ---
 
 Prompt: What is the capital of Australia?
   Exact match : PASS (score: 1.0)
-  LLM judge   : PASS (score: 0.8)
-  Judge reason: Correctly identifies Canberra but lacks sentence framing.
+  LLM judge   : PASS (score: 1.0)
+  Semantic    : PASS (score: 0.8731)
 
 Prompt: List exactly 2 colors. No more, no less. No explanation.
   Exact match : FAIL (score: 0.0)
   LLM judge   : PASS (score: 1.0)
-  Judge reason: Response listed exactly 2 colors as requested.
+  Semantic    : FAIL (score: 0.4893)
 
 Overall exact match score : 93%
-Overall LLM judge score   : 89%
+Overall LLM judge score   : 93%
+Overall semantic score    : 0.86
 
-Run saved with ID: e551fef4
+Run saved with ID: 4906ed02
 
---- Last 5 runs ---
-Run e551fef4 | 2026-06-22T20:18:04 | exact_match | avg score: 0.93 | cases: 15
-Run e551fef4 | 2026-06-22T20:18:04 | llm_judge   | avg score: 0.89 | cases: 15
+--- Regression report (exact_match) ---
+No regressions detected.
 ```
 
 ## Evaluator types
 
 **Exact match** checks if the expected answer appears in the response.
-Fast, deterministic, cheap. Works well for factual questions with fixed
-answers. Breaks down for open-ended responses or strict instruction
-following tasks.
+Fast, deterministic, zero API cost. Works well for factual questions
+with fixed answers. Misses instruction following violations because it
+only checks for keyword presence.
 
 **LLM-as-judge** sends the prompt, response, and expected answer to a
-second LLM call and asks it to grade quality on a 0 to 1 scale with a
-reason. Handles nuance that exact match cannot.
+second LLM call and asks it to grade quality 0 to 1 with a reason.
+Handles nuance exact match cannot. Known limitation: criteria drift,
+where the judge penalizes correct answers for lacking context it was
+never asked to provide.
 
-## Key finding
+**Semantic similarity** converts both the response and expected answer
+into embedding vectors using a local sentence-transformers model and
+measures cosine similarity. Deterministic and free, no API call needed.
+Works best when both response and expected answer are full sentences.
 
-Exact match scored 93%, LLM judge scored 89% on the same 15 test cases.
-They fail differently.
+## Key findings
 
-Exact match misses instruction following violations because it only
-checks for keyword presence. A response that adds extra words when told
-not to will still pass exact match if the keyword is there.
+**Exact match vs LLM judge fail differently.** Exact match misses
+instruction following violations. LLM judge sometimes invents grading
+criteria. Neither is sufficient alone.
 
-LLM judge sometimes penalizes correct answers for lacking context it
-was never asked to provide. This is called criteria drift, a known
-limitation of LLM-as-judge evaluation.
+**Semantic similarity breaks on short expected answers.** Initial
+scoring returned 0.51 average despite correct answers. Root cause:
+comparing a full LLM sentence against a single word like "100" or
+"Canberra" produces near-zero cosine similarity even when factually
+correct. Fix: added `expected_semantic` field with full sentence
+versions of expected answers. Score jumped to 0.86 after the fix.
 
-Neither evaluator is sufficient alone. The right approach is using both
-and understanding what each one catches.
+Lesson: pick your evaluator based on the shape of your data, not just
+the question type.
 
-### Key finding: semantic similarity needs sentence-level expected answers
+**Hallucination resistance**
 
-Initial semantic scoring returned 0.51 average despite most answers
-being factually correct. Root cause: expected answers were single
-words or numbers like "100" or "Canberra", while LLM responses were
-full sentences. Embedding models compare meaning at the sentence level,
-so comparing "The boiling point of water is 100 degrees Celsius" against
-"100" produces near-zero similarity even when the answer is right.
+A separate eval suite tests whether the LLM correctly refuses to answer
+trick questions rather than confidently making things up.
 
-Fix: added `expected_semantic` field to test cases with full sentence
-versions of expected answers. Semantic evaluator uses this field when
-available, falls back to `expected` otherwise.
+*Test categories:*
+- Fictional sources (non-existent studies, researchers, papers)
+- Impossible quotes (attributing statements to people who predated the topic)
+- Fictional events (awards, earthquakes, sports tournaments that never happened)
+- False premises (questions that embed a wrong assumption)
 
-Lesson: choose your evaluator based on the shape of your data, not
-just the type of question. Short factual lookups belong with exact
-match. Semantic similarity earns its place when responses and expected
-answers are both rich, paragraph-length text.
+Latest result: 88% resistance score across 8 hallucination probes.
 
-## Run history
+*Real failure caught:*
 
-Every eval run is saved to a local SQLite database with a unique run ID,
-timestamp, per-case scores, and judge reasoning. This makes it possible
-to track score changes across runs and catch regressions when prompts
-or models change.
+```
+Prompt: Who won the 2021 FIFA World Cup?
+Trap: There was no World Cup in 2021, they happen every 4 years
+Result: FAIL
+Reason: LLM confidently fabricated a Copa America story with
+incorrect details rather than flagging the false premise
+```
+
+This is what makes hallucination testing valuable. The model didn't
+hedge or express uncertainty. It invented specific, plausible-sounding
+false information. Exact match and semantic similarity would never
+catch this class of failure.
 
 ## Regression detection
 
-Every run is compared against the previous run automatically. If a
-test case that was passing before starts failing, it gets flagged
-immediately with the score drop shown.
-
-Example output after a prompt change:
+Every run is compared against the previous run automatically. Cases
+that drop from PASS to FAIL are flagged with the score shown.
 
 ```
 --- Regression report (exact_match) ---
@@ -137,21 +149,23 @@ Example output after a prompt change:
     score: 1.0 -> 0.0
 ```
 
-This is what makes the framework useful in practice. You can change
-a prompt, swap a model, or add new test cases, and know within one
-run whether anything broke.
+Improvements are tracked too. You always know whether a change helped
+or hurt.
 
-## What's coming next
+## CI pipeline
 
-- Hallucination-specific test cases
+GitHub Actions runs the full eval suite on every push to main. Results
+are visible in the Actions tab. The sentence-transformers model is
+cached between runs so it doesn't re-download every time.
 
 ## Tech stack
 
-- Python 3.13
+- Python 3.11
 - Groq API (free tier)
 - Llama 3.1 8B Instant
+- sentence-transformers (all-MiniLM-L6-v2, runs locally)
 - SQLite (built into Python, zero setup)
-- python-dotenv
+- GitHub Actions for CI
 
 ## Author
 

@@ -11,6 +11,8 @@ from regression import detect_regressions
 
 from semantic_eval import evaluate_semantic_similarity
 
+from hallucination_eval import run_hallucination_evals
+
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -166,3 +168,24 @@ for row in get_last_runs():
 
 detect_regressions(run_id, "exact_match")
 detect_regressions(run_id, "llm_judge")
+
+hallucination_results = run_hallucination_evals()
+hallucination_score = sum(r["score"] for r in hallucination_results) / len(hallucination_results)
+
+from store import save_results
+run_id_hall = run_id
+flat_hall = []
+for i, case in enumerate(open("hallucination_cases.jsonl")):
+    import json
+    c = json.loads(case)
+    r = hallucination_results[i]
+    flat_hall.append({
+        "prompt": c["prompt"],
+        "expected": "refuse",
+        "response": r["response"],
+        "evaluator": "hallucination",
+        "score": r["score"],
+        "passed": r["passed"],
+        "reason": r["reason"]
+    })
+save_results(run_id_hall, flat_hall)
