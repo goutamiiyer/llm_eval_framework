@@ -20,10 +20,12 @@ swap models, change prompts, or add new features to an AI system.
 
 ## Project structure
 
+```
 LLM_eval_framework/
 ├── evaluator.py       # core eval logic and API call
 ├── test_cases.jsonl   # test dataset: prompts + expected answers
 └── .env               # API keys, never committed to git
+```
 
 ## How to run
 
