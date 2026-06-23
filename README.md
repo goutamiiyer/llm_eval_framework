@@ -104,10 +104,27 @@ timestamp, per-case scores, and judge reasoning. This makes it possible
 to track score changes across runs and catch regressions when prompts
 or models change.
 
+## Regression detection
+
+Every run is compared against the previous run automatically. If a
+test case that was passing before starts failing, it gets flagged
+immediately with the score drop shown.
+
+Example output after a prompt change:
+
+```
+--- Regression report (exact_match) ---
+1 regression(s) found:
+  REGRESSED: What is 2 + 2?
+    score: 1.0 -> 0.0
+```
+
+This is what makes the framework useful in practice. You can change
+a prompt, swap a model, or add new test cases, and know within one
+run whether anything broke.
+
 ## What's coming next
 
-- Regression detection: automatically flag cases that drop from PASS to FAIL
-  across consecutive runs
 - Semantic similarity scoring using embeddings
 - GitHub Actions CI to run evals automatically on every commit
 - Hallucination-specific test cases
