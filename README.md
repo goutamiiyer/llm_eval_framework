@@ -158,6 +158,20 @@ GitHub Actions runs the full eval suite on every push to main. Results
 are visible in the Actions tab. The sentence-transformers model is
 cached between runs so it doesn't re-download every time.
 
+## CLI usage
+
+Run specific evaluators without touching the code:
+
+```bash
+python evaluator.py                          # runs everything
+python evaluator.py --evaluator exact_match  # only exact match
+python evaluator.py --evaluator llm_judge    # only LLM judge
+python evaluator.py --evaluator semantic     # only semantic
+python evaluator.py --evaluator hallucination # only hallucination suite
+python evaluator.py --evaluator all --output report.md  # save markdown report
+python evaluator.py --history                # print run history and exit
+```
+
 ## Tech stack
 
 - Python 3.11
