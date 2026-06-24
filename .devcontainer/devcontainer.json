@@ -1,0 +1,6 @@
+{
+  "name": "LLM Eval Framework",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "pip install groq python-dotenv sentence-transformers chromadb",
+  "rememberEnvironmentVariables": true
+}
