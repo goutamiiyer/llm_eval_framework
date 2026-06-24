@@ -137,6 +137,20 @@ hedge or express uncertainty. It invented specific, plausible-sounding
 false information. Exact match and semantic similarity would never
 catch this class of failure.
 
+**Non-determinism finding**
+
+Running the same 8 hallucination probes three times in one session
+produced scores of 100%, 88%, and 38%. Same model, same prompts,
+different outputs each time.
+
+This is not a framework bug. It demonstrates why single-run evals
+are unreliable for LLM systems. The SQLite run history exists
+specifically to surface this variance over time.
+
+Production implication: any LLM-powered feature that needs consistent
+behavior requires either temperature=0, output validation, or
+multiple-run averaging, not a one-time eval pass.
+
 ## Regression detection
 
 Every run is compared against the previous run automatically. Cases
