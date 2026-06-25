@@ -195,6 +195,12 @@ python evaluator.py --history                # print run history and exit
 - SQLite (built into Python, zero setup)
 - GitHub Actions for CI
 
+## What's coming next?
+
+This eval framework is used as the evaluation layer for the
+[production-rag-system](https://github.com/goutamiiyer/production-rag-system),
+which applies these same patterns to measure RAG pipeline quality.
+
 ## Author
 
 Goutami, software engineer with a background in distributed systems
