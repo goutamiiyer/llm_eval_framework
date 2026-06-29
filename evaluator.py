@@ -8,8 +8,8 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
 def evaluate_exact_match(response: str, expected: str) -> dict:
-    response_clean = response.strip().lower()
-    expected_clean = expected.strip().lower()
+    response_clean = " ".join(response.lower().split())
+    expected_clean = " ".join(expected.lower().split())
     passed = expected_clean in response_clean
     return {
         "passed": passed,

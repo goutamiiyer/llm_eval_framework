@@ -5,6 +5,7 @@ from hallucination_eval import run_hallucination_evals
 from store import init_db, save_results, get_last_runs
 from regression import detect_regressions
 
+import time
 
 def load_test_cases(path: str = "test_cases.jsonl") -> list:
     with open(path) as f:
@@ -34,6 +35,8 @@ def run_suite(evaluators: list) -> dict:
                 case["prompt"],
                 case.get("expected_semantic", case["expected"])
             ) if do_semantic else None
+
+            time.sleep(1)
 
             results.append({
                 "prompt": case["prompt"],

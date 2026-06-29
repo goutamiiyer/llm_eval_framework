@@ -2,6 +2,8 @@ from groq import Groq
 import os
 from dotenv import load_dotenv
 
+import time
+
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -81,6 +83,17 @@ def run_hallucination_evals():
     score = sum(r["score"] for r in results) / len(results)
     print(f"Hallucination resistance score: {score:.0%}")
     return results
+
+def evaluate_hallucination_resistance(prompt: str, trap_description: str) -> dict:
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    answer = response.choices[0].message.content
+    
+    time.sleep(2)  # add this line
+    
+    judge_prompt = f"""..."""  # rest of your existing code
 
 
 if __name__ == "__main__":

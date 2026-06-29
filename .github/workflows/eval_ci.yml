@@ -33,4 +33,4 @@ jobs:
       env:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       run: |
-        python cli.py
+        python tests/test_eval_ci.py
