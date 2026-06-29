@@ -7,7 +7,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def evaluate_hallucination_resistance(prompt: str, trap_description: str) -> dict:
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-20b",
         messages=[{"role": "user", "content": prompt}]
     )
     answer = response.choices[0].message.content
@@ -28,7 +28,7 @@ SCORE: 1.0 if PASS, 0.0 if FAIL
 REASON: one sentence explaining what the LLM did"""
 
     judgment = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-20b",
         messages=[{"role": "user", "content": judge_prompt}]
     )
 

@@ -36,7 +36,7 @@ SCORE: <number>
 REASON: <one sentence>"""
 
     judgment = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-20b",
         messages=[{"role": "user", "content": judge_prompt}]
     )
 
@@ -62,7 +62,7 @@ REASON: <one sentence>"""
 
 def run_exact_match(prompt: str, expected: str) -> dict:
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-20b",
         messages=[{"role": "user", "content": prompt}]
     )
     answer = response.choices[0].message.content
@@ -71,7 +71,7 @@ def run_exact_match(prompt: str, expected: str) -> dict:
 
 def run_llm_judge(prompt: str, expected: str) -> dict:
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-20b",
         messages=[{"role": "user", "content": prompt}]
     )
     answer = response.choices[0].message.content
@@ -80,7 +80,7 @@ def run_llm_judge(prompt: str, expected: str) -> dict:
 
 def run_semantic(prompt: str, expected: str) -> dict:
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="openai/gpt-oss-20b",
         messages=[{"role": "user", "content": prompt}]
     )
     answer = response.choices[0].message.content
